@@ -1,0 +1,118 @@
+{
+    "log": {
+        "loglevel": "none"
+    },
+    "dns": {
+        "servers": [
+            "https+local://1.1.1.1/dns-query",
+            "localhost"
+        ]
+    },
+    "routing": {
+        "domainStrategy": "IPIfNonMatch",
+        "rules": [
+            {
+                "type": "field",
+                "outboundTag": "warp_proxy",
+                "domain": [
+                    "geosite:netflix",
+                    "geosite:disney",
+                    "geosite:openai",
+                    "geosite:vimeo",
+                    "geosite:bing",
+                    "geosite:instagram"
+                ]
+            },
+            {
+                "inboundTag": [
+                    "vless_in"
+                ],
+                "outboundTag": "direct",
+                "type": "field"
+            },
+            {
+                "type": "field",
+                "ip": [
+                    "geoip:private"
+                ],
+                "outboundTag": "blocked"
+            },
+            {
+                "type": "field",
+                "ip": [
+                    "geoip:cn"
+                ],
+                "outboundTag": "blocked"
+            },
+            {
+                "type": "field",
+                "domain": [
+                    "geosite:category-ads-all"
+                ],
+                "outboundTag": "blocked"
+            }
+        ]
+    },
+    "inbounds": [
+        {
+            "tag": "vless_in",
+            "port": 10111,
+            "protocol": "vless",
+            "settings": {
+                "clients": [
+                    {
+                        "id": "161d5519-8e9b-4963-bdee-343e774e3d1d", // 运行 `xray uuid` 生成
+                        "flow": "xtls-rprx-vision"
+                    }
+                ],
+                "decryption": "none"
+            },
+            "streamSettings": {
+                "network": "tcp",
+                "security": "reality",
+                "realitySettings": {
+                    "dest": "www.kciconst.com:443", // 目标网站
+                    "serverNames": [
+                        "www.kciconst.com" // 目标网站
+                    ],
+                    "privateKey": "iEN_IiSkGMt5ObNgWCKd1p5b-3qSkEqlyOHTC2F3G1M", // 运行 `xray x25519` 生成
+                    "shortIds": [ // 运行 `openssl rand -hex 8` 生成
+                        "6ac6f0226e8bd560"
+                    ]
+                }
+            },
+            "sniffing": {
+                "enabled": true,
+                "destOverride": [
+                    "http",
+                    "tls",
+                    "quic"
+                ],
+                "routeOnly": true
+            }
+        }
+    ],
+    "outbounds": [
+        {
+            "protocol": "freedom",
+            "tag": "direct"
+        },
+        {
+            "tag": "warp_proxy",
+            "protocol": "socks",
+            "settings": {
+                "servers": [
+                    {
+                        "address": "127.0.0.1",
+                        "port": 40000
+                    }
+                ]
+            }
+        },
+        {
+            "protocol": "blackhole",
+            "settings": {},
+            "tag": "blocked"
+        }
+    ]
+}
